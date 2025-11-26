@@ -1,62 +1,103 @@
 from tkinter import *
+from tkinter import ttk
 import utils
-import quanly_xemay 
+import quanly_xemay
+import quanly_nhanvien 
+import quanly_khachhang
+import quanly_hoadon
+import quanly_taikhoan
+import thongtin_taikhoan
 
 class MainApp:
     def __init__(self, root, role, fullname):
         self.root = root
-        self.root.title("Phần Mềm Quản Lý Cửa Hàng Xe Máy")
-        self.root.state('zoomed') # Full màn hình
-        utils.setup_style()
+        self.role = role
+        self.fullname = fullname
+        self.root.title("Hệ Thống Quản Lý Cửa Hàng Xe Máy")
+        self.root.state('zoomed') # Mở toàn màn hình
+        
+        utils.setup_theme(root)
 
-        # --- CHIA LAYOUT (Giống hình bạn gửi) ---
-        # 1. MENU TRÁI (Sidebar)
-        self.sidebar = Frame(root, bg=utils.COLOR_MENU_BG, width=220)
+        # --- LAYOUT CHÍNH: CHIA 2 CỘT ---
+        # Cột 1: Menu bên trái (Sidebar)
+        self.sidebar = Frame(root, bg=utils.NAV_BG, width=250)
         self.sidebar.pack(side=LEFT, fill=Y)
         self.sidebar.pack_propagate(False) # Cố định chiều rộng
 
-        # 2. NỘI DUNG PHẢI (Content)
-        self.content = Frame(root, bg=utils.COLOR_MAIN_BG)
-        self.content.pack(side=RIGHT, fill=BOTH, expand=True)
+        # Cột 2: Nội dung bên phải
+        self.content_area = Frame(root, bg="white")
+        self.content_area.pack(side=RIGHT, fill=BOTH, expand=True)
 
-        # --- NỘI DUNG MENU TRÁI ---
-        # Logo/Avatar
-        Label(self.sidebar, text="QL XE MÁY", font=("Arial", 18, "bold"), 
-              bg=utils.COLOR_MENU_BG, fg="white").pack(pady=30)
+        # --- NỘI DUNG SIDEBAR ---
+        # Info user
+        Label(self.sidebar, text=f"Xin chào,\n{fullname}", font=("Arial", 12, "bold"), 
+              bg=utils.NAV_BG, fg="yellow", justify=CENTER).pack(pady=30)
         
-        Label(self.sidebar, text=f"Hi, {fullname}", font=("Arial", 10, "italic"),
-              bg=utils.COLOR_MENU_BG, fg="#f1c40f").pack(pady=(0, 20))
+        Label(self.sidebar, text=f"Vai trò: {role}", font=("Arial", 10, "italic"), 
+              bg=utils.NAV_BG, fg="white").pack(pady=(0, 20))
 
-        # Các nút Menu
-        self.create_menu_btn("Trang Chủ", self.show_home)
-        self.create_menu_btn("Quản Lý Xe Máy", self.show_xe)
-        self.create_menu_btn("Quản Lý Nhân Viên", lambda: None) # Chưa làm
-        self.create_menu_btn("Hóa Đơn", lambda: None) # Chưa làm
+        # MENU BUTTONS
+        self.create_nav_btn("Trang Chủ", self.show_home)
+        self.create_nav_btn("Quản Lý Xe Máy", self.show_xemay)
         
-        Button(self.sidebar, text="Đăng Xuất", command=root.destroy, bg="red", fg="white").pack(side=BOTTOM, fill=X)
+        if role == 'Admin':
+            self.create_nav_btn("Quản Lý Nhân Viên", self.show_nhanvien)
+        
+        self.create_nav_btn("Quản Lý Khách Hàng", self.show_khachhang)
+        self.create_nav_btn("Hóa Đơn & Bán Hàng", self.show_hoadon)
+        self.create_nav_btn("Quản Lý Tài Khoản", self.show_taikhoan)
+        self.create_nav_btn("Thông Tin Tài Khoản", self.show_taikhoan)
+        
+        # Nút Đăng xuất ở dưới cùng
+        Button(self.sidebar, text="Đăng Xuất", command=root.destroy, 
+               bg="#c0392b", fg="white", relief="flat").pack(side=BOTTOM, fill=X, pady=10, padx=10)
 
-        self.show_home() # Mặc định vào trang chủ
+        # Mặc định hiện trang chủ
+        self.show_home()
 
-    def create_menu_btn(self, text, command):
+    def create_nav_btn(self, text, command):
         btn = Button(self.sidebar, text=text, command=command,
-                     bg=utils.COLOR_MENU_BG, fg=utils.COLOR_MENU_FG,
-                     font=("Arial", 11), anchor="w", padx=20, pady=12,
-                     relief="flat", activebackground=utils.COLOR_BTN_HOVER)
-        btn.pack(fill=X, pady=1)
+                     bg=utils.NAV_BG, fg=utils.NAV_FG,
+                     font=("Arial", 11), anchor="w", padx=20, pady=10,
+                     activebackground=utils.NAV_HOVER, activeforeground="white",
+                     relief="flat", bd=0)
+        btn.pack(fill=X)
 
     def clear_content(self):
-        for widget in self.content.winfo_children():
+        for widget in self.content_area.winfo_children():
             widget.destroy()
 
+    # --- CÁC HÀM CHUYỂN TRANG ---
     def show_home(self):
         self.clear_content()
-        Label(self.content, text="TRANG CHỦ", font=("Arial", 30), bg=utils.COLOR_MAIN_BG).pack(pady=100)
+        Label(self.content_area, text="TRANG CHỦ HỆ THỐNG", 
+              font=("Arial", 24, "bold"), fg="#bdc3c7", bg="white").pack(expand=True)
 
-    def show_xe(self):
+    def show_xemay(self):
         self.clear_content()
-        quanly_xemay.create_ui(self.content)
+        quanly_xemay.create_ui(self.content_area)
 
-def main_screen(role, name):
+    def show_nhanvien(self):
+        self.clear_content()
+        quanly_nhanvien.create_ui(self.content_area)
+        
+    def show_khachhang(self):
+        self.clear_content()
+        quanly_khachhang.create_ui(self.content_area)
+
+    def show_hoadon(self):
+        self.clear_content()
+        quanly_hoadon.create_ui(self.content_area)
+
+    def show_taikhoan(self):
+        self.clear_content()
+        quanly_taikhoan.create_ui(self.content_area)
+    
+    def show_thongtin_taikhoan(self):
+        self.clear_content()
+        thongtin_taikhoan.create_ui(self.content_area, self.role, self.fullname)
+
+def main_screen(role, fullname):
     root = Tk()
-    MainApp(root, role, name)
+    app = MainApp(root, role, fullname)
     root.mainloop()
