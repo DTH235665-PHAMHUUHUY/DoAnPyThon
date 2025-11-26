@@ -1,99 +1,61 @@
-import tkinter as tk
+from tkinter import *
 from tkinter import messagebox
 import hashlib
-import sys
-import os
-import subprocess
-import utils  # Import file utils vừa tạo
+import utils
+import main 
 
-def hash_password(password):
-    """Mã hóa mật khẩu sang SHA-256 để so sánh với CSDL."""
-    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+class LoginApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Đăng Nhập Hệ Thống")
+        self.root.geometry("450x350")
+        self.root.configure(bg="white")
 
-def check_login(event=None):
-    username = entry_username.get()
-    password = entry_password.get()
+        # Tiêu đề
+        Label(root, text="QUẢN LÝ XE MÁY", font=("Arial", 20, "bold"), fg="#2980b9", bg="white").pack(pady=30)
 
-    if not username or not password:
-        messagebox.showwarning("Thiếu thông tin", "Vui lòng nhập Tên đăng nhập và Mật khẩu.")
-        return
+        # Form
+        frame = Frame(root, bg="white")
+        frame.pack()
 
-    conn = utils.connect_db()
-    if conn is None: return
+        Label(frame, text="Tên đăng nhập:", font=("Arial", 10), bg="white").grid(row=0, column=0, sticky=W, pady=10)
+        self.entry_user = Entry(frame, width=30, font=("Arial", 11), relief="solid")
+        self.entry_user.grid(row=0, column=1, pady=10)
 
-    try:
-        cur = conn.cursor()
-        # Lấy Mật khẩu, Vai trò và Mã NV dựa trên tên đăng nhập
-        sql = "SELECT MatKhau, VaiTro, MaNhanVien FROM TaiKhoan WHERE TenDangNhap = ?"
-        cur.execute(sql, (username,))
-        record = cur.fetchone()
+        Label(frame, text="Mật khẩu:", font=("Arial", 10), bg="white").grid(row=1, column=0, sticky=W, pady=10)
+        self.entry_pass = Entry(frame, width=30, font=("Arial", 11), show="*", relief="solid")
+        self.entry_pass.grid(row=1, column=1, pady=10)
 
-        if record:
-            db_pass = record[0]
-            db_role = record[1]
-            # db_manv = record[2] # Có thể dùng sau này nếu cần
-            
-            input_hash = hash_password(password)
-            
-            # So sánh mật khẩu đã mã hóa
-            if input_hash == db_pass:
-                messagebox.showinfo("Thành công", f"Đăng nhập thành công!\nVai trò: {db_role}")
-                login_window.destroy()
-                open_main_menu(username, db_role)
+        # Nút đăng nhập
+        Button(root, text="ĐĂNG NHẬP", command=self.login, 
+               font=("Arial", 11, "bold"), bg="#2980b9", fg="white", 
+               width=20, height=2, relief="flat").pack(pady=30)
+
+    def login(self):
+        user = self.entry_user.get()
+        pwd = self.entry_pass.get()
+        
+        # Hash pass
+        hashed = hashlib.sha256(pwd.encode()).hexdigest()
+
+        conn = utils.get_connection()
+        if conn:
+            cursor = conn.cursor()
+            sql = """SELECT TK.VaiTro, NV.HoVaTen 
+                     FROM TaiKhoan TK JOIN NhanVien NV ON TK.MaNhanVien=NV.MaNhanVien 
+                     WHERE TK.TenDangNhap=? AND TK.MatKhau=?"""
+            cursor.execute(sql, (user, hashed))
+            row = cursor.fetchone()
+            conn.close()
+
+            if row:
+                self.root.destroy()
+                # Mở màn hình chính
+                main.main_screen(row[0], row[1]) 
             else:
-                messagebox.showerror("Lỗi", "Sai mật khẩu.")
-        else:
-            messagebox.showerror("Lỗi", "Tên đăng nhập không tồn tại.")
-            
-    except Exception as e:
-        messagebox.showerror("Lỗi", f"Lỗi hệ thống: {e}")
-    finally:
-        if conn: conn.close()
+                messagebox.showerror("Lỗi", "Sai thông tin đăng nhập!")
 
-def open_main_menu(username, role):
-    """Mở file main.py và truyền tham số."""
-    python_exec = sys.executable
-    script_path = os.path.join(os.path.dirname(_file_), "main.py")
-    
-    if not os.path.exists(script_path):
-        messagebox.showerror("Lỗi", "Không tìm thấy file main.py")
-        return
-
-    # Truyền username và role sang main.py
-    subprocess.Popen([python_exec, script_path, username, role])
-
-# --- GIAO DIỆN LOGIN ---
-login_window = tk.Tk()
-login_window.title("Đăng nhập - Quản lý Cửa hàng Xe máy")
-login_window.geometry("400x300")
-login_window.resizable(False, False)
-
-# Căn giữa màn hình
-screen_width = login_window.winfo_screenwidth()
-screen_height = login_window.winfo_screenheight()
-x = (screen_width/2) - (400/2)
-y = (screen_height/2) - (300/2)
-login_window.geometry('%dx%d+%d+%d' % (400, 300, x, y))
-
-# Widget
-tk.Label(login_window, text="ĐĂNG NHẬP HỆ THỐNG", font=("Arial", 16, "bold"), fg="#0078D7").pack(pady=30)
-
-frame_form = tk.Frame(login_window)
-frame_form.pack()
-
-tk.Label(frame_form, text="Tài khoản:").grid(row=0, column=0, padx=5, pady=10, sticky="e")
-entry_username = tk.Entry(frame_form, font=("Arial", 12))
-entry_username.grid(row=0, column=1, padx=5, pady=10)
-
-tk.Label(frame_form, text="Mật khẩu:").grid(row=1, column=0, padx=5, pady=10, sticky="e")
-entry_password = tk.Entry(frame_form, font=("Arial", 12), show="*")
-entry_password.grid(row=1, column=1, padx=5, pady=10)
-
-btn_login = tk.Button(login_window, text="Đăng nhập", font=("Arial", 12, "bold"), 
-                      bg="#0078D7", fg="white", width=20, command=check_login)
-btn_login.pack(pady=30)
-
-login_window.bind('<Return>', check_login)
-login_window.mainloop()
-
-
+if __name__ == "__main__":
+    tk = Tk()
+    app = LoginApp(tk)
+    tk.mainloop()
