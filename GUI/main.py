@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from PIL import Image, ImageTk
 import utils
 import quanly_xemay
 import quanly_nhanvien 
@@ -38,15 +39,20 @@ class MainApp:
 
         # MENU BUTTONS
         self.create_nav_btn("Trang Chủ", self.show_home)
+
         self.create_nav_btn("Quản Lý Xe Máy", self.show_xemay)
         
-        if role == 'Admin':
+        if self.role in ['Admin', 'QuanLy']:
             self.create_nav_btn("Quản Lý Nhân Viên", self.show_nhanvien)
         
         self.create_nav_btn("Quản Lý Khách Hàng", self.show_khachhang)
+
         self.create_nav_btn("Hóa Đơn & Bán Hàng", self.show_hoadon)
-        self.create_nav_btn("Quản Lý Tài Khoản", self.show_taikhoan)
-        self.create_nav_btn("Thông Tin Tài Khoản", self.show_taikhoan)
+
+        if role == 'Admin':
+            self.create_nav_btn("Quản Lý Tài Khoản", self.show_taikhoan)
+
+        self.create_nav_btn("Thông Tin Tài Khoản", self.show_thongtin_taikhoan)
         
         # Nút Đăng xuất ở dưới cùng
         Button(self.sidebar, text="Đăng Xuất", command=root.destroy, 
@@ -70,8 +76,8 @@ class MainApp:
     # --- CÁC HÀM CHUYỂN TRANG ---
     def show_home(self):
         self.clear_content()
-        Label(self.content_area, text="TRANG CHỦ HỆ THỐNG", 
-              font=("Arial", 24, "bold"), fg="#bdc3c7", bg="white").pack(expand=True)
+        Label(self.content_area, text="QUẢN LÝ CỬA HÀNG XE MÁY", 
+              font=("Arial", 24, "bold"), fg="#3182ce", bg="white").pack(expand=True)
 
     def show_xemay(self):
         self.clear_content()
@@ -95,7 +101,7 @@ class MainApp:
     
     def show_thongtin_taikhoan(self):
         self.clear_content()
-        thongtin_taikhoan.create_ui(self.content_area, self.role, self.fullname)
+        thongtin_taikhoan.create_ui(self.content_area)
 
 def main_screen(role, fullname):
     root = Tk()

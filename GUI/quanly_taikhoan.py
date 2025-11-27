@@ -275,10 +275,22 @@ def create_ui(parent_frame):
     # Search
     frame_search = Frame(frame_btn, bg=BG_COLOR)
     frame_search.pack(side=RIGHT)
-    Button(frame_search, text="Tìm", command=lambda: load_data(var_search.get()), bg="#34495e", fg="white").pack(side=RIGHT, padx=2)
-    Entry(frame_search, textvariable=var_search, width=20).pack(side=RIGHT, padx=5)
-    Label(frame_search, text="Tìm:", bg=BG_COLOR).pack(side=RIGHT)
 
+    def do_search(event=None): # Hàm này chấp nhận event để bind phím Enter
+        load_data(var_search.get())
+    
+    def reset_search():
+        var_search.set("")
+        load_data()
+
+    Button(frame_search, text="Tìm kiếm", command=do_search, bg="#34495e", fg="white").pack(side=RIGHT, padx=2)
+    entry_search = Entry(frame_search, textvariable=var_search, width=25)
+    entry_search.pack(side=RIGHT, padx=5)
+    entry_search.bind('<Return>', do_search) # Bấm Enter để tìm ngay
+    Label(frame_search, text="Tìm:", bg=BG_COLOR).pack(side=RIGHT)
+    # Nút làm mới danh sách
+    Button(frame_search, text="↻", command=reset_search, font=("Arial", 10, "bold"), width=3).pack(side=RIGHT, padx=5)
+   
     # Table
     frame_tree = Frame(parent_frame, bg="white")
     frame_tree.pack(fill=BOTH, expand=True, padx=20, pady=10)
